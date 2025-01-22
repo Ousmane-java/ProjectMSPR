@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Franchises</title>
+</head>
+<body>
+    <h1>Liste des Franchises</h1>
+    <ul>
+        {% for franchise in franchises %}
+            <li>
+                <h2>{{ franchise.name }}</h2>
+                <p><strong>Adresse IP :</strong> {{ franchise.ip_address }}</p>
+                <p><strong>Localisation :</strong> {{ franchise.location }}</p>
+                <p><strong>Dernière activité :</strong> {{ franchise.last_seen }}</p>
+                <p><strong>Contact :</strong> {{ franchise.contact_person }}</p>
+                <p><strong>Email :</strong> {{ franchise.contact_email }}</p>
+                <p><strong>Téléphone :</strong> {{ franchise.contact_phone }}</p>
+            </li>
+        {% empty %}
+            <p>Aucune franchise n'a été ajoutée pour le moment.</p>
+        {% endfor %}
+    </ul>
+</body>
+</html>
