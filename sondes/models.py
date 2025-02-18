@@ -9,6 +9,8 @@ class Franchise(models.Model):
     contact_person = models.CharField(max_length=100, blank=True, null=True, help_text="Personne à contacter")
     contact_email = models.EmailField(blank=True, null=True, help_text="Email de contact")
     contact_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Téléphone de contact")
+    sondes = models.TextField(blank=True, null=True, help_text="Liste des sondes en format texte")
+    ports_open = models.CharField(max_length=255, blank=True, null=True, help_text="Liste des ports ouverts")
 
     def __str__(self):
         return self.name

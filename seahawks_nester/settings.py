@@ -38,7 +38,26 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'sondes', #le nom de mon app
+     'rest_framework',
+     'channels',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Modifier selon vos besoins (ex : permissions restreintes)
+    ],
+}
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # L'adresse et le port de Redis
+        },
+    },
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -68,8 +87,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'seahawks_nester.wsgi.application'
-
+ASGI_APPLICATION = 'seahawks_nester.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

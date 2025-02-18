@@ -15,13 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from sondes import views  # Importer les vues de votre app sondes
 from django.urls import path, include
-
+from sondes.views import home  # Importer la vue home
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  # URL pour accéder à l'interface admin
-    path('', views.home, name='home'),  # Vue par défaut pour l'URL racine
-    path('sondes/', include('sondes.urls')),  # Inclure les URLs de l'app sondes
+    path('admin/', admin.site.urls),  # URL pour l'administration Django
+    path('api/', include('sondes.urls')),  # Inclure les URLs de l'API
+    path('', home, name='home'),  # Page d'accueil
 ]

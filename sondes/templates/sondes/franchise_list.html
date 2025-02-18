@@ -4,23 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des Franchises</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px auto;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .status-open {
+            color: green;
+            font-weight: bold;
+        }
+        .status-closed {
+            color: red;
+            font-weight: bold;
+        }
+        .contact {
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
     <h1>Liste des Franchises</h1>
-    <ul>
-        {% for franchise in franchises %}
-            <li>
-                <h2>{{ franchise.name }}</h2>
-                <p><strong>Adresse IP :</strong> {{ franchise.ip_address }}</p>
-                <p><strong>Localisation :</strong> {{ franchise.location }}</p>
-                <p><strong>Dernière activité :</strong> {{ franchise.last_seen }}</p>
-                <p><strong>Contact :</strong> {{ franchise.contact_person }}</p>
-                <p><strong>Email :</strong> {{ franchise.contact_email }}</p>
-                <p><strong>Téléphone :</strong> {{ franchise.contact_phone }}</p>
-            </li>
-        {% empty %}
-            <p>Aucune franchise n'a été ajoutée pour le moment.</p>
-        {% endfor %}
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Adresse IP</th>
+                <th>Localisation</th>
+                <th>Dernière activité</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Ports</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for franchise in franchises %}
+                <tr>
+                    <td>{{ franchise.name }}</td>
+                    <td>{{ franchise.ip_address }}</td>
+                    <td>{{ franchise.location }}</td>
+                    <td>{{ franchise.last_seen }}</td>
+                    <td class="contact">{{ franchise.contact_person }}</td>
+                    <td>{{ franchise.contact_email }}</td>
+                    <td>{{ franchise.contact_phone }}</td>
+                    <td>
+                        {% if franchise.ports_display %}
+                            {% for port in franchise.ports_display %}
+                                <span class="status-{{ port.status }}">{{ port.port }}</span>
+                                {% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            Aucun port défini
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center;">Aucune franchise trouvée.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
