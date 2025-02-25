@@ -1,19 +1,75 @@
 from django.db import models
+from django.utils.timezone import now, timedelta
 
 class Franchise(models.Model):
-    """Représente une franchise (client)."""
+    """Représente une franchise (client Seahawks Harvester)."""
+    
+    # Informations générales de la franchise
     name = models.CharField(max_length=100, unique=True, help_text="Nom de la franchise")
     ip_address = models.GenericIPAddressField(help_text="Adresse IP de la franchise")
-    location = models.CharField(max_length=255, blank=True, null=True, help_text="Localisation de la franchise")
-    last_seen = models.DateTimeField(auto_now=True, help_text="Dernière activité enregistrée")
-    contact_person = models.CharField(max_length=100, blank=True, null=True, help_text="Personne à contacter")
-    contact_email = models.EmailField(blank=True, null=True, help_text="Email de contact")
-    contact_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Téléphone de contact")
-    sondes = models.TextField(blank=True, null=True, help_text="Liste des sondes en format texte")
+    location = models.CharField(max_length=255, blank=True, null=True, help_text="Localisation")
     ports_open = models.CharField(max_length=255, blank=True, null=True, help_text="Liste des ports ouverts")
+    last_modified = models.DateTimeField(null=True, blank=True, help_text="Dernière mise à jour générale")  
+
+    # **Ajout des champs pour suivre les modifications de l'IP et des ports**
+    ip_address_last_modified = models.DateTimeField(null=True, blank=True, help_text="Dernière modification de l'IP")
+    ports_open_last_modified = models.DateTimeField(null=True, blank=True, help_text="Dernière modification des ports")
+
+    contact_person = models.CharField(max_length=100, blank=True, null=True, help_text="Contact principal")
+    contact_email = models.EmailField(blank=True, null=True, help_text="Email du contact")
+    contact_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Téléphone")
+    last_seen = models.DateTimeField(auto_now=True, help_text="Dernière activité")
+
+    # **Statut de la franchise**
+    STATUS_CHOICES = [
+        ("connected", "Connecté"),
+        ("disconnected", "Déconnecté"),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="connected", help_text="État actuel de la franchise")
+
+    def is_recently_modified(self):
+        """Retourne True si l'IP ou les ports ont été modifiés dans les 2 dernières heures."""
+        two_hours_ago = now() - timedelta(hours=2)
+        return (
+            (self.ip_address_last_modified and self.ip_address_last_modified >= two_hours_ago) or
+            (self.ports_open_last_modified and self.ports_open_last_modified >= two_hours_ago)
+        )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.status}"
+
+
+class NetworkDevice(models.Model):
+    """Représente un équipement réseau (serveur, switch, routeur) appartenant à une franchise."""
+    DEVICE_TYPES = [
+        ("server", "Serveur"),
+        ("router", "Routeur"),
+        ("switch", "Switch"),
+        ("firewall", "Pare-feu"),
+    ]
+
+    franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name="network_devices")
+    name = models.CharField(max_length=100, help_text="Nom de l'équipement")
+    device_type = models.CharField(max_length=20, choices=DEVICE_TYPES, help_text="Type d'équipement")
+    ip_address = models.GenericIPAddressField(help_text="Adresse IP de l'équipement")
+    status = models.CharField(max_length=20, choices=[("online", "En ligne"), ("offline", "Hors ligne")], default="online")
+    last_modified = models.DateTimeField(auto_now=True, help_text="Dernière mise à jour")
+
+    def __str__(self):
+        return f"{self.name} ({self.device_type}) - {self.franchise.name}"
+
+
+class FranchiseChangeLog(models.Model):
+    """Stocke l'historique des modifications de l'IP et des ports ouverts d'une franchise."""
+    franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name="change_logs")
+    old_ip_address = models.GenericIPAddressField(blank=True, null=True, help_text="Ancienne adresse IP")
+    new_ip_address = models.GenericIPAddressField(blank=True, null=True, help_text="Nouvelle adresse IP")
+    old_ports_open = models.CharField(max_length=255, blank=True, null=True, help_text="Anciens ports ouverts")
+    new_ports_open = models.CharField(max_length=255, blank=True, null=True, help_text="Nouveaux ports ouverts")
+    changed_at = models.DateTimeField(auto_now_add=True, help_text="Date et heure du changement")
+
+    def __str__(self):
+        return f"Changement {self.franchise.name} - {self.changed_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class ScanReport(models.Model):
@@ -23,13 +79,13 @@ class ScanReport(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date du scan")
 
     def __str__(self):
-        return f"Rapport de scan pour {self.franchise.name} le {self.created_at}"
+        return f"Scan pour {self.franchise.name} - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class SondaStatus(models.Model):
     """État de la connectivité des sondes (clients Seahawks Harvester)."""
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='sonda_status')
-    status = models.CharField(max_length=20, choices=[('connected', 'Connecté'), ('disconnected', 'Déconnecté')], default='disconnected', help_text="Statut de la sonde")
+    status = models.CharField(max_length=20, choices=[('connected', 'Connecté'), ('disconnected', 'Déconnecté')], default='connected', help_text="Statut de la sonde")
     updated_at = models.DateTimeField(auto_now=True, help_text="Dernière mise à jour du statut")
 
     def __str__(self):
@@ -43,7 +99,7 @@ class NetworkLatency(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, help_text="Date et heure de la mesure")
 
     def __str__(self):
-        return f"Latence pour {self.franchise.name} : {self.latency} ms"
+        return f"Latence {self.latency} ms - {self.franchise.name} ({self.timestamp.strftime('%Y-%m-%d %H:%M:%S')})"
 
 
 class ApplicationVersion(models.Model):
@@ -53,4 +109,4 @@ class ApplicationVersion(models.Model):
     updated_at = models.DateTimeField(auto_now=True, help_text="Date de mise à jour")
 
     def __str__(self):
-        return f"Version {self.version} pour {self.franchise.name}"
+        return f"Version {self.version} - {self.franchise.name} ({self.updated_at.strftime('%Y-%m-%d %H:%M:%S')})"

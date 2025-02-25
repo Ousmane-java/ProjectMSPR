@@ -1,5 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .views import franchise_change_log  # Vérifie que cette ligne est bien présente
+from .views import franchise_change_log, franchise_list  # Import des vues nécessaires
+from .views import franchise_devices  # Import de la vue pour les équipements
 from .views import (
     FranchiseViewSet, SondaStatusViewSet, ScanReportViewSet,
     NetworkLatencyViewSet, ApplicationVersionViewSet,
@@ -22,7 +25,23 @@ urlpatterns = [
     
     # Routes API (Correction : suppression du préfixe `api/` ici)
     path('', include(router.urls)),  
+
+
+    # Route pour la liste des franchises en HTML
+    path('', franchise_list, name='franchise_list'), 
+
+     # Route pour afficher une franchise spécifique
+    path('<int:franchise_id>/', franchise_detail, name='franchise_detail'), 
     
     # Route pour mettre à jour l'état des sondes
     path('update-sonda-status/', update_sonda_status, name='update_sonda_status'),
+
+    # Route pour afficher l'historique des changements
+    path('change-log/', franchise_change_log, name='franchise_change_log'),
+
+    # Route pour afficher les équipements d'une franchise
+    path('franchises/<int:franchise_id>/devices/', franchise_devices, name='franchise_devices'),
+    path('<int:franchise_id>/devices/', franchise_devices, name='franchise_devices_shortcut'),  # Nouvelle route
+
+
 ]

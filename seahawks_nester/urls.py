@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from sondes.views import home  # Importer la vue home
+from sondes.views import home  # Import de la vue home
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  # URL pour l'administration Django
-    path('api/', include('sondes.urls')),  # Inclure les URLs de l'API
-    path('', home, name='home'),  # Page d'accueil
+    path('admin/', admin.site.urls),
+    path('api/', include('sondes.urls')),  # API REST pour les franchises
+    path('sondes/', include('sondes.urls')),  # Ajout de l'application sondes
+    path('', home, name='home'),  # Page d'accueil principale
 ]
+
