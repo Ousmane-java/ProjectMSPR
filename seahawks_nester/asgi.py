@@ -17,6 +17,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'seahawks_nester.settings')
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
+    "websocket": URLRouter(websocket_urlpatterns),
     "websocket": AuthMiddlewareStack(
         URLRouter(
             websocket_urlpatterns

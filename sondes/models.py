@@ -4,23 +4,24 @@ from django.utils.timezone import now, timedelta
 class Franchise(models.Model):
     """Représente une franchise (client Seahawks Harvester)."""
     
-    # Informations générales de la franchise
     name = models.CharField(max_length=100, unique=True, help_text="Nom de la franchise")
     ip_address = models.GenericIPAddressField(help_text="Adresse IP de la franchise")
     location = models.CharField(max_length=255, blank=True, null=True, help_text="Localisation")
     ports_open = models.CharField(max_length=255, blank=True, null=True, help_text="Liste des ports ouverts")
+    
+    # Suivi des modifications
     last_modified = models.DateTimeField(null=True, blank=True, help_text="Dernière mise à jour générale")  
-
-    # **Ajout des champs pour suivre les modifications de l'IP et des ports**
     ip_address_last_modified = models.DateTimeField(null=True, blank=True, help_text="Dernière modification de l'IP")
     ports_open_last_modified = models.DateTimeField(null=True, blank=True, help_text="Dernière modification des ports")
 
+    # Contact
     contact_person = models.CharField(max_length=100, blank=True, null=True, help_text="Contact principal")
     contact_email = models.EmailField(blank=True, null=True, help_text="Email du contact")
     contact_phone = models.CharField(max_length=20, blank=True, null=True, help_text="Téléphone")
+    
     last_seen = models.DateTimeField(auto_now=True, help_text="Dernière activité")
 
-    # **Statut de la franchise**
+    # Statut de la franchise
     STATUS_CHOICES = [
         ("connected", "Connecté"),
         ("disconnected", "Déconnecté"),
@@ -40,7 +41,8 @@ class Franchise(models.Model):
 
 
 class NetworkDevice(models.Model):
-    """Représente un équipement réseau (serveur, switch, routeur) appartenant à une franchise."""
+    """Équipement réseau (serveur, switch, routeur) appartenant à une franchise."""
+    
     DEVICE_TYPES = [
         ("server", "Serveur"),
         ("router", "Routeur"),
@@ -61,6 +63,7 @@ class NetworkDevice(models.Model):
 
 class FranchiseChangeLog(models.Model):
     """Stocke l'historique des modifications de l'IP et des ports ouverts d'une franchise."""
+    
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name="change_logs")
     old_ip_address = models.GenericIPAddressField(blank=True, null=True, help_text="Ancienne adresse IP")
     new_ip_address = models.GenericIPAddressField(blank=True, null=True, help_text="Nouvelle adresse IP")
@@ -74,6 +77,7 @@ class FranchiseChangeLog(models.Model):
 
 class ScanReport(models.Model):
     """Rapport de scan réseau effectué par une franchise."""
+    
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='scan_reports')
     scan_data = models.JSONField(help_text="Résultats du scan en format JSON (machines connectées, ports)")
     created_at = models.DateTimeField(auto_now_add=True, help_text="Date du scan")
@@ -84,6 +88,7 @@ class ScanReport(models.Model):
 
 class SondaStatus(models.Model):
     """État de la connectivité des sondes (clients Seahawks Harvester)."""
+    
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='sonda_status')
     status = models.CharField(max_length=20, choices=[('connected', 'Connecté'), ('disconnected', 'Déconnecté')], default='connected', help_text="Statut de la sonde")
     updated_at = models.DateTimeField(auto_now=True, help_text="Dernière mise à jour du statut")
@@ -94,6 +99,7 @@ class SondaStatus(models.Model):
 
 class NetworkLatency(models.Model):
     """Latence WAN enregistrée par une franchise."""
+    
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='latencies')
     latency = models.FloatField(help_text="Latence moyenne (ms)")
     timestamp = models.DateTimeField(auto_now_add=True, help_text="Date et heure de la mesure")
@@ -104,9 +110,26 @@ class NetworkLatency(models.Model):
 
 class ApplicationVersion(models.Model):
     """Version de l'application installée sur une franchise."""
+    
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name='application_versions')
     version = models.CharField(max_length=50, help_text="Version de l'application déployée")
     updated_at = models.DateTimeField(auto_now=True, help_text="Date de mise à jour")
 
     def __str__(self):
         return f"Version {self.version} - {self.franchise.name} ({self.updated_at.strftime('%Y-%m-%d %H:%M:%S')})"
+
+
+class NetworkScan(models.Model):
+    """Stocke les résultats des scans réseau."""
+    
+    franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, related_name="network_scans")
+    ip_address = models.GenericIPAddressField(help_text="Adresse IP scannée")
+    open_ports = models.TextField(blank=True, null=True, help_text="Liste des ports ouverts")
+    services = models.TextField(blank=True, null=True, help_text="Services détectés sur la machine")
+    os_detected = models.CharField(max_length=255, blank=True, null=True, help_text="Système d'exploitation détecté")
+    vulnerabilities = models.TextField(blank=True, null=True, help_text="Liste des vulnérabilités détectées")
+    latency = models.FloatField(blank=True, null=True, help_text="Temps de réponse en ms")
+    scan_time = models.DateTimeField(default=now, help_text="Date et heure du scan")
+
+    def __str__(self):
+        return f"Scan de {self.franchise.name} - {self.ip_address} ({self.scan_time})"

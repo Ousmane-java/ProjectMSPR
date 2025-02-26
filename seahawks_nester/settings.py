@@ -51,6 +51,7 @@ REST_FRAMEWORK = {
 
 CHANNEL_LAYERS = {
     "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Pour un test en local
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [("127.0.0.1", 6379)],  # L'adresse et le port de Redis
